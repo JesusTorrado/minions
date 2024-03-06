@@ -129,18 +129,25 @@ minor modes that is usually displayed directly in the mode line."
 (defvar-keymap minions-mode-line-minor-modes-map
   "<mode-line> <down-mouse-1>" #'minions-minor-modes-menu)
 
+;; Show major mode name and mode-line-process
+;; TODO: turn into customizable var
+(setq minions-show-major t)
+
 (defvar minions-mode-line-modes
   (let ((recursive-edit-help-echo "Recursive edit, type C-M-c to get out"))
-    (list (propertize "%[" 'help-echo recursive-edit-help-echo)
-          '(:eval (car minions-mode-line-delimiters))
-          `(:propertize ("" mode-name)
-                        help-echo "Major mode
+    (append
+     (list (propertize "%[" 'help-echo recursive-edit-help-echo)
+           '(:eval (car minions-mode-line-delimiters)))
+     (when minions-show-major
+       (list `(:propertize ("" mode-name)
+                           help-echo "Major mode
 mouse-1: Display major mode menu
 mouse-2: Show help for major mode
 mouse-3: Toggle minor modes"
-                        mouse-face mode-line-highlight
-                        local-map ,mode-line-major-mode-keymap)
-          '("" mode-line-process)
+                           mouse-face mode-line-highlight
+                           local-map ,mode-line-major-mode-keymap)
+             '("" mode-line-process)))
+     (list
           (propertize "%n" 'help-echo "mouse-2: Remove narrowing from buffer"
                       'mouse-face 'mode-line-highlight
                       'local-map (make-mode-line-mouse-map
@@ -152,7 +159,7 @@ mouse-1: Display minor mode menu
 mouse-2: Show help for minor mode
 mouse-3: Toggle minor modes"
                         local-map ,mode-line-minor-mode-keymap)
-          '(:eval (and (not (member minions-mode-line-lighter '("" nil))) " "))
+          '(:eval (and (not (member minions-mode-line-lighter '("" nil))) minions-show-major " "))
           '(:eval (propertize minions-mode-line-lighter
                               'face minions-mode-line-face
                               'mouse-face 'mode-line-highlight
@@ -161,7 +168,7 @@ mouse-1: Display minor modes menu"
                               'local-map minions-mode-line-minor-modes-map))
           '(:eval (cdr minions-mode-line-delimiters))
           (propertize "%]" 'help-echo recursive-edit-help-echo)
-          " "))
+          " ")))
   "Alternative mode line construct for displaying major and minor modes.
 Similar to `mode-line-modes' but instead of showing (a subset
 of) the enable minor modes directly in the mode line, list all
